@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── 全域重置與基礎 ── */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: #12161A;
+  color: #C8CDD0;
+  font-family: "Noto Sans TC", "Inter", system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  /* 防止 iOS Safari 橡皮筋效果觸發不必要的重整 */
+  overscroll-behavior: none;
+}
+
+/* ── 滾軸美化 ── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2A3038;
+  border-radius: 4px;
+}
+
+/* ── prefers-reduced-motion 全局降級 ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── 選取色彩 ── */
+::selection {
+  background-color: rgba(155, 175, 158, 0.3);
+  color: #C8CDD0;
+}
+
+/* ── PWA 安全區 ── */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* ── 自訂工具類 ── */
+@layer components {
+  .glass-card {
+    @apply bg-oasis-surface/80 backdrop-blur-md border border-oasis-border/50 rounded-2xl;
+  }
+
+  .text-soft {
+    @apply text-oasis-text/80;
+  }
+
+  .btn-gentle {
+    @apply px-6 py-3 rounded-xl bg-oasis-sage/20 text-oasis-sage 
+           border border-oasis-sage/30 transition-all duration-300
+           hover:bg-oasis-sage/30 active:scale-95;
+  }
+
+  .btn-warm {
+    @apply px-6 py-3 rounded-xl bg-oasis-glow/15 text-oasis-glow
+           border border-oasis-glow/20 transition-all duration-300
+           hover:bg-oasis-glow/25 active:scale-95;
+  }
+}
