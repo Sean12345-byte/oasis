@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Shield } from "lucide-react";
 import { getPrefs, setPrivacyNoticeSeen } from "@/lib/storage";
 import { registerServiceWorker } from "@/lib/sw";
+import { checkAndSendNotification } from "@/lib/notifications";
 import BottomNav from "@/components/BottomNav";
 
 export default function AppLayoutShell({ children }: { children: React.ReactNode }) {
@@ -19,6 +20,12 @@ export default function AppLayoutShell({ children }: { children: React.ReactNode
     setReady(true);
     // 註冊 Service Worker
     registerServiceWorker();
+
+    // 每 60 秒檢查一次推播排程
+    const interval = setInterval(checkAndSendNotification, 60_000);
+    // 立即檢查一次
+    checkAndSendNotification();
+    return () => clearInterval(interval);
   }, []);
 
   const handleAcceptPrivacy = () => {

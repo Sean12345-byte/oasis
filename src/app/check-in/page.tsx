@@ -6,9 +6,11 @@ import { Send, Eye, EyeOff, Info, Palette } from "lucide-react";
 import EmotionPicker, { type EmotionKey, EMOTIONS } from "@/components/EmotionPicker";
 import HugAnimation from "@/components/HugAnimation";
 import SafetyIntercept, { MediumRiskBanner } from "@/components/SafetyIntercept";
+import VoiceInput from "@/components/VoiceInput";
 import { checkSafety } from "@/lib/safety";
 import { saveEmotionRecord } from "@/lib/db";
 import { getPrefs, setPrefs, type AnimationStyle } from "@/lib/storage";
+import { trackSafetyCheck, trackUserContinued, trackUserViewedResources } from "@/lib/devstats";
 
 // 溫柔鼓勵語
 const GENTLE_AFFIRMATIONS = [
@@ -50,6 +52,7 @@ export default function CheckInPage() {
 
   const handleRelease = useCallback(async () => {
     const sResult = checkSafety(text);
+    trackSafetyCheck(sResult.riskLevel);
     if (sResult.isHighRisk) {
       setPhase("safety-check");
       return;
@@ -163,6 +166,11 @@ export default function CheckInPage() {
                            resize-none focus:outline-none focus:border-oasis-sage/30 
                            transition-colors"
               />
+              {/* 語音輸入 */}
+              <VoiceInput
+                onTranscript={(t) => setText((prev) => prev + t)}
+                disabled={phase !== "write"}
+              />
               <div className="flex items-center justify-between">
                 <span className="text-xs text-oasis-muted/30">
                   {text.length} / 2000
@@ -252,8 +260,11 @@ export default function CheckInPage() {
           >
             <SafetyIntercept
               text={text}
-              onNeedHelp={() => {}}
+              onNeedHelp={() => {
+                trackUserViewedResources();
+              }}
               onContinue={async () => {
+                trackUserContinued();
                 if (trackingEnabled && emotion) {
                   try {
                     await saveEmotionRecord(selectedEmotion?.label || emotion);
