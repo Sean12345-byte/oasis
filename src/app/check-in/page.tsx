@@ -2,15 +2,15 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Eye, EyeOff, Info } from "lucide-react";
+import { Send, Eye, EyeOff, Info, Palette } from "lucide-react";
 import EmotionPicker, { type EmotionKey, EMOTIONS } from "@/components/EmotionPicker";
 import HugAnimation from "@/components/HugAnimation";
-import SafetyIntercept from "@/components/SafetyIntercept";
+import SafetyIntercept, { MediumRiskBanner } from "@/components/SafetyIntercept";
 import { checkSafety } from "@/lib/safety";
 import { saveEmotionRecord } from "@/lib/db";
-import { getPrefs, setPrefs } from "@/lib/storage";
+import { getPrefs, setPrefs, type AnimationStyle } from "@/lib/storage";
 
-// 溫柔鼓勵語（隨機挑選）
+// 溫柔鼓勵語
 const GENTLE_AFFIRMATIONS = [
   "你願意把這些寫下來，本身就需要很大的勇氣。",
   "這些情緒是真實的，它們值得被看見，你也值得。",
@@ -19,6 +19,13 @@ const GENTLE_AFFIRMATIONS = [
   "文字消散了，但你對自己的溫柔，留了下來。",
   "沒有什麼需要「解決」。此刻，能呼吸就好。",
   "霧會散的。不急，慢慢來。",
+];
+
+// 動畫風格選項
+const ANIMATION_OPTIONS: { key: AnimationStyle; label: string; emoji: string }[] = [
+  { key: "hearts",  label: "擁抱", emoji: "💚" },
+  { key: "glow",    label: "光暈", emoji: "✨" },
+  { key: "ripple",  label: "波紋", emoji: "🌊" },
 ];
 
 type Phase = "select" | "write" | "safety-check" | "animating" | "done";
@@ -33,25 +40,25 @@ export default function CheckInPage() {
   const [trackingEnabled, setTrackingEnabled] = useState(
     () => getPrefs().trendTracking
   );
+  const [animationStyle, setAnimationStyle] = useState<AnimationStyle>(
+    () => getPrefs().animationStyle
+  );
+  const [showStylePicker, setShowStylePicker] = useState(false);
 
   const selectedEmotion = EMOTIONS.find((e) => e.key === emotion);
+  const safetyResult = checkSafety(text);
 
-  // 處理釋放
   const handleRelease = useCallback(async () => {
-    // 安全檢查
-    const safetyResult = checkSafety(text);
-    if (safetyResult.isHighRisk) {
+    const sResult = checkSafety(text);
+    if (sResult.isHighRisk) {
       setPhase("safety-check");
       return;
     }
 
-    // 若開啟趨勢追蹤，記錄情緒標籤
     if (trackingEnabled && emotion) {
       try {
         await saveEmotionRecord(selectedEmotion?.label || emotion);
-      } catch {
-        // IndexedDB 寫入失敗不影響 UX
-      }
+      } catch {}
     }
 
     setPhase("animating");
@@ -65,6 +72,12 @@ export default function CheckInPage() {
     setEmotion(null);
     setText("");
     setPhase("select");
+  };
+
+  const handleStyleChange = (style: AnimationStyle) => {
+    setAnimationStyle(style);
+    setPrefs({ animationStyle: style });
+    setShowStylePicker(false);
   };
 
   return (
@@ -119,7 +132,6 @@ export default function CheckInPage() {
             exit={{ opacity: 0, y: -16 }}
             className="space-y-5"
           >
-            {/* 已選擇的情緒 */}
             {selectedEmotion && (
               <div
                 className={`flex items-center gap-3 p-3 rounded-xl ${selectedEmotion.bgColor} border border-oasis-border/20`}
@@ -136,7 +148,6 @@ export default function CheckInPage() {
               </div>
             )}
 
-            {/* 文字輸入 */}
             <div className="space-y-2">
               <label className="text-xs text-oasis-muted/60">
                 把想說的，都寫在這裡。這些文字不會被儲存，只會消散。
@@ -156,26 +167,64 @@ export default function CheckInPage() {
                 <span className="text-xs text-oasis-muted/30">
                   {text.length} / 2000
                 </span>
-                {/* 趨勢追蹤開關 */}
-                <button
-                  onClick={() => {
-                    const newVal = !trackingEnabled;
-                    setTrackingEnabled(newVal);
-                    setPrefs({ trendTracking: newVal });
-                  }}
-                  className="flex items-center gap-1.5 text-xs text-oasis-muted/40 hover:text-oasis-muted/60 transition-colors"
-                >
-                  {trackingEnabled ? (
-                    <Eye size={13} />
-                  ) : (
-                    <EyeOff size={13} />
-                  )}
-                  匿名趨勢{trackingEnabled ? "開" : "關"}
-                </button>
+                <div className="flex items-center gap-3">
+                  {/* 動畫風格選擇 */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowStylePicker(!showStylePicker)}
+                      className="flex items-center gap-1 text-xs text-oasis-muted/40 hover:text-oasis-muted/60 transition-colors"
+                    >
+                      <Palette size={13} />
+                    </button>
+                    <AnimatePresence>
+                      {showStylePicker && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 4 }}
+                          className="absolute bottom-full right-0 mb-2 glass-card p-2 rounded-xl flex gap-1 z-20"
+                        >
+                          {ANIMATION_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.key}
+                              onClick={() => handleStyleChange(opt.key)}
+                              className={`px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all
+                                ${animationStyle === opt.key
+                                  ? "bg-oasis-sage/15 text-oasis-sage"
+                                  : "text-oasis-muted/50 hover:bg-oasis-surface2"}
+                              `}
+                            >
+                              {opt.emoji} {opt.label}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* 趨勢追蹤開關 */}
+                  <button
+                    onClick={() => {
+                      const newVal = !trackingEnabled;
+                      setTrackingEnabled(newVal);
+                      setPrefs({ trendTracking: newVal });
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-oasis-muted/40 hover:text-oasis-muted/60 transition-colors"
+                  >
+                    {trackingEnabled ? (
+                      <Eye size={13} />
+                    ) : (
+                      <EyeOff size={13} />
+                    )}
+                    匿名趨勢{trackingEnabled ? "開" : "關"}
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* 釋放按鈕 */}
+            {/* 中風險輕提示（不阻擋動畫） */}
+            <MediumRiskBanner text={text} />
+
             <button
               onClick={handleRelease}
               disabled={!text.trim()}
@@ -186,7 +235,6 @@ export default function CheckInPage() {
               <span>釋放</span>
             </button>
 
-            {/* 隱私提示 */}
             <p className="text-center text-[11px] text-oasis-muted/30 flex items-center justify-center gap-1">
               <Info size={11} />
               你的文字不會離開這台裝置
@@ -204,11 +252,8 @@ export default function CheckInPage() {
           >
             <SafetyIntercept
               text={text}
-              onNeedHelp={() => {
-                // 不關閉，讓使用者自己探索資源
-              }}
+              onNeedHelp={() => {}}
               onContinue={async () => {
-                // 繼續釋放
                 if (trackingEnabled && emotion) {
                   try {
                     await saveEmotionRecord(selectedEmotion?.label || emotion);
@@ -232,6 +277,7 @@ export default function CheckInPage() {
             <HugAnimation
               text={text}
               phase="dissipating"
+              style={animationStyle}
               onComplete={handleAnimationComplete}
             />
           </motion.div>
@@ -245,7 +291,11 @@ export default function CheckInPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center text-center pt-8 space-y-8"
           >
-            <HugAnimation text={text} phase="complete" />
+            <HugAnimation
+              text={text}
+              phase="complete"
+              style={animationStyle}
+            />
 
             <motion.div
               initial={{ opacity: 0, y: 8 }}

@@ -3,6 +3,9 @@
 
 const PREFIX = "oasis_";
 
+/** 擁抱動畫的視覺風格 */
+export type AnimationStyle = "hearts" | "glow" | "ripple";
+
 export interface UserPreferences {
   /** 是否啟用「匿名化情緒趨勢記錄」（預設關閉） */
   trendTracking: boolean;
@@ -14,6 +17,8 @@ export interface UserPreferences {
   theme: "dark";
   /** 語言 */
   language: "zh-TW";
+  /** 釋放動畫的視覺風格偏好 */
+  animationStyle: AnimationStyle;
 }
 
 const DEFAULT_PREFS: UserPreferences = {
@@ -22,6 +27,7 @@ const DEFAULT_PREFS: UserPreferences = {
   nickname: "",
   theme: "dark",
   language: "zh-TW",
+  animationStyle: "hearts",
 };
 
 export function getPrefs(): UserPreferences {

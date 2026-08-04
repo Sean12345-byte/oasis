@@ -15,7 +15,7 @@ import {
   BookOpen,
   Wind,
   Sun,
-  MessageCircle,
+  PenLine,
   EyeOff,
   type LucideIcon,
 } from "lucide-react";
@@ -27,7 +27,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Heart,
   Wind,
   Sun,
-  MessageCircle,
+  PenLine,
   EyeOff,
 };
 

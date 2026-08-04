@@ -1,13 +1,13 @@
 // ── 預設微習慣清單 ──
 // 設計原則：小到不可能失敗，無壓力的起點
+// 所有習慣皆為「純粹對自己」的內向行動 — 不包含需要對外互動的項目
 
 export interface MicroHabit {
   id: string;
-  icon: string;        // Lucide icon name
+  icon: string;
   title: string;
   description: string;
   category: "body" | "mind" | "connection" | "rest";
-  /** 完成後的溫柔回應 */
   completionMessages: string[];
 }
 
@@ -79,14 +79,14 @@ export const DEFAULT_HABITS: MicroHabit[] = [
     ],
   },
   {
-    id: "message-someone",
-    icon: "MessageCircle",
-    title: "傳一個貼圖給想念的人",
-    description: "不必寫長篇大論，一個表情符號就夠了",
-    category: "connection",
+    id: "kind-words-self",
+    icon: "PenLine",
+    title: "寫一句溫柔的話給自己",
+    description: "像對待最好的朋友那樣，對自己說一句話",
+    category: "mind",
     completionMessages: [
-      "有時候，一個小小的連結就足以溫暖一整天",
-      "你的存在，對某個人來說就是光",
+      "你對自己說的每一句溫柔的話，都在心裡生了根",
+      "善待自己，不是口號，是這樣小小的練習",
     ],
   },
   {
@@ -103,8 +103,6 @@ export const DEFAULT_HABITS: MicroHabit[] = [
 ];
 
 // ── 反罪惡感文案 ──
-// 使用者當天沒做任何習慣時顯示（隨機挑選）
-
 export const NO_PRESSURE_MESSAGES: string[] = [
   "今天辛苦了，休息也是進度的一部分，我們隨時重新開始。",
   "沒有做到也沒關係。你在這裡，這本身就已經足夠。",
@@ -116,7 +114,6 @@ export const NO_PRESSURE_MESSAGES: string[] = [
   "今天你活著、呼吸著、還在這裡——這已經是最重要的事了。",
 ];
 
-// ── 隨機挑選工具 ──
 export function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
